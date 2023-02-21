@@ -1,22 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl } from '@angular/forms';
+import { FormGroup, FormControl } from '@angular/forms';
 import { Toast } from '@capacitor/toast';
 import { ModalController } from '@ionic/angular';
 
 import { OrmService } from '../services/orm.service';
-import { AuthorPostService } from '../services/author-post.service';
 import { Author } from '../entities/author/author';
 import { Category } from '../entities/author/category';
 import { Post } from '../entities/author/post';
 import { PostPage } from 'src/app/pages/author/post/post.page';
 import { PostsPage } from 'src/app/pages/author/posts/posts.page';
+import { catchError, from, Observable, of, switchMap, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements OnInit{
+export class HomePage {
   mainForm!: FormGroup;
   categoryGroup!: FormGroup;
   authorGroup!: FormGroup;
@@ -27,18 +27,30 @@ export class HomePage implements OnInit{
   public authorList: Author[] = [];
   public categoryList: Category[] = [];
   public postList: Post[] = [];
+  public sqliteInitialized: Observable<boolean>;
 
-  constructor(private ormService: OrmService,
-    private modalCtrl: ModalController) {
-  }
-  ngOnInit(): void {
-
-    this.initOrmService().then (async () => {
-      if(!this.ormService.isOrmService) {
-        throw new Error(`Error: TypeOrm Service didn't start`);
-      }
-    });
-
+  constructor(
+    private ormService: OrmService,
+    private modalCtrl: ModalController
+  ) {
+    this.sqliteInitialized = ormService.observeSqliteStatus().pipe(
+      switchMap((ready) => {
+        if (ready) {
+          return from(this.initOrmService());
+        }
+        return throwError(
+          () => new Error('SQLite was not properly initialized')
+        );
+      }),
+      switchMap(() => {
+        if (!this.ormService.isOrmService) {
+          return throwError(
+            () => new Error(`Error: TypeOrm Service didn't start`)
+          );
+        }
+        return of(true);
+      })
+    );
   }
 
   // Private methods
@@ -48,8 +60,8 @@ export class HomePage implements OnInit{
   async initOrmService() {
     try {
       await this.ormService.initialize();
-    } catch(err: any) {
-      const msg = err.message ? err.message : err
+    } catch (err: any) {
+      const msg = err.message ? err.message : err;
       throw new Error(`Error: ${msg}`);
     }
   }
@@ -59,15 +71,15 @@ export class HomePage implements OnInit{
   async addPost() {
     const modal = await this.modalCtrl.create({
       component: PostPage,
-      canDismiss: true
+      canDismiss: true,
     });
     modal.present();
     const { data, role } = await modal.onWillDismiss();
     if (role === 'confirm') {
-      if(data) {
-         await Toast.show({
+      if (data) {
+        await Toast.show({
           text: `addPost: ${JSON.stringify(data)}`,
-          duration: 'long'
+          duration: 'long',
         });
       }
     }
@@ -78,9 +90,8 @@ export class HomePage implements OnInit{
   async listPost() {
     const modal = await this.modalCtrl.create({
       component: PostsPage,
-      canDismiss: true
+      canDismiss: true,
     });
     modal.present();
   }
-
 }

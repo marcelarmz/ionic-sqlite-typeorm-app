@@ -2,10 +2,12 @@ import { Injectable } from '@angular/core';
 
 import { Capacitor } from '@capacitor/core';
 import { CapacitorSQLite, /*SQLiteDBConnection,*/ SQLiteConnection, CapacitorSQLitePlugin } from '@capacitor-community/sqlite';
+import { Subject } from 'rxjs';
 
 @Injectable()
 
 export class SQLiteService {
+    sqliteReadySubject = new Subject<boolean>();
     sqliteConnection: SQLiteConnection;
     isService = false;
     platform: string;
@@ -24,6 +26,7 @@ export class SQLiteService {
       if(this.platform === 'web') {
         try {
           await this.sqliteConnection.initWebStore();
+          this.sqliteReadySubject.next(true);
         } catch (err) {
           console.log(`Error: ${err}`);
           throw new Error(`Error: ${err}`)

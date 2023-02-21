@@ -17,7 +17,7 @@ export default new DataSource({
   entities: [Author, Category, Post],
   migrations: [InitializeAuthorPost1671880018001],
   subscribers: [],
-  logging: [/*'query',*/ 'error','schema'],
+  logging: ['query', 'error','schema'],
   synchronize: false,
   migrationsRun: false,
 });

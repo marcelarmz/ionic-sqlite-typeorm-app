@@ -21,11 +21,6 @@ if(platform === "web") {
   // required for jeep-sqlite Stencil component
   // to use a SQLite database in Browser
   jeepSqlite(window);
-
-  window.addEventListener('DOMContentLoaded', async () => {
-      const jeepEl = document.createElement("jeep-sqlite");
-      document.body.appendChild(jeepEl);
-  });
 }
 // Above only required if you want to use a web platform <--
 

@@ -1,16 +1,17 @@
 import { Injectable } from '@angular/core';
 import { SQLiteService } from './sqlite.service';
-//import UserDataSource from '../data-sources/UserDataSource';
 import AuthorDataSource from '../data-sources/AuthorDataSource';
 import { AuthorPostService } from './author-post.service';
-import { DataSource, Migration, MigrationInterface } from 'typeorm';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class OrmService {
   isOrmService: Boolean = false;
 
-  constructor(private sqliteService: SQLiteService,
-    private authorPostService: AuthorPostService) {};
+  constructor(
+    private sqliteService: SQLiteService,
+    private authorPostService: AuthorPostService
+  ) {}
 
   // Private functions
   /**
@@ -37,17 +38,21 @@ export class OrmService {
           }
           if (this.sqliteService.getPlatform() === 'web') {
             // save the databases from memory to store
-            await this.sqliteService.getSqliteConnection().saveToStore(database);
+            await this.sqliteService
+              .getSqliteConnection()
+              .saveToStore(database);
           }
-
         }
         console.log(`DataSource: ${database} initialized`);
       }
 
       this.isOrmService = true;
-    }  catch (err) {
+    } catch (err) {
       console.log(`Error: ${err}`);
     }
   }
-}
 
+  observeSqliteStatus(): Observable<boolean> {
+    return this.sqliteService.sqliteReadySubject.asObservable();
+  }
+}

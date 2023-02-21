@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { Platform } from '@ionic/angular';
+import { Capacitor } from '@capacitor/core';
+import { SQLiteService } from './services/sqlite.service';
 
 @Component({
   selector: 'app-root',
@@ -7,11 +8,25 @@ import { Platform } from '@ionic/angular';
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent {
-  constructor(private platform: Platform) {
+  isWeb = Capacitor.getPlatform() === 'web';
+
+  constructor(private sqliteService: SQLiteService) {
     this.initializeApp();
   }
-  initializeApp() {
-    this.platform.ready().then(async () => {
-    });
+
+  async initializeApp() {
+    if (this.isWeb) {
+      await customElements.whenDefined('jeep-sqlite');
+      const jeepSqliteElement = document.querySelector('jeep-sqlite');
+      if (jeepSqliteElement != null) {
+        await this.sqliteService.initializeWebStore();
+        console.log(
+          `>>>> isStoreOpen ${await jeepSqliteElement.isStoreOpen()}`
+        );
+      }
+    } else {
+      // It's native, no more configs are needed. It's ready to use
+      this.sqliteService.sqliteReadySubject.next(true);
+    }
   }
 }

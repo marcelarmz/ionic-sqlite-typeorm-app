@@ -14,7 +14,7 @@
   </ion-header>
 
   <div id="home-container">
-    <ion-list lines="full">
+    <ion-list lines="full" *ngIf="sqliteInitialized | async">
       <ion-item>
         <ion-label color='primary'>Post</ion-label>
         <div class="item-category" item-end>
